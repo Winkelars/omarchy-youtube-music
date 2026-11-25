@@ -40,8 +40,10 @@ disabled by default:
 3. Start a track. The bar entry appears as soon as the player is exported.
 
 The plugin recognises Pear by MPRIS identity, by the
-`org.mpris.MediaPlayer2.YouTubeMusic` bus name, or by the `youtube-music` /
-`pear-desktop` desktop entry, so detection survives a rename of any single one.
+`org.mpris.MediaPlayer2.YouTubeMusic` bus name (which the app name turns into
+`YouTubeMusic` or `YoutubeMusic` depending on the mpris-service version, matched
+case-insensitively here), or by the `youtube-music` / `pear-desktop` desktop
+entry, so detection survives a rename of any single one.
 
 ## Install
 
