@@ -44,6 +44,29 @@ ShellRoot {
     }
   }
 
+  function vivaldi(title, album) {
+    var player = chromium(title, album)
+    player.identity = "Vivaldi"
+    return player
+  }
+
+  // Pear Desktop exposes MPRIS through its Shortcuts plugin. The fixture
+  // publishes no xesam:url and an empty album, so only the app-level hints
+  // (identity, bus name, desktop entry) can identify it -- exactly the case a
+  // browser heuristic would miss.
+  function pear(title, overrides) {
+    var player = {
+      identity: "YouTube Music",
+      dbusName: "org.mpris.MediaPlayer2.YouTubeMusic",
+      desktopEntry: "youtube-music",
+      trackTitle: title,
+      isPlaying: true,
+      metadata: { "xesam:title": title, "xesam:album": "" }
+    }
+    for (var key in overrides) player[key] = overrides[key]
+    return player
+  }
+
   Component.onCompleted: {
     var podcast = chromium("The S in PHP is for Security", "")
     var cases = [
@@ -62,6 +85,24 @@ ShellRoot {
         ["Earlier song | YouTube Music", "Some video - YouTube - Chromium"], false],
       // Existing album fallback keeps working with no window at all.
       ["song with album, no window", chromium("A song", "An album"), [], true],
+      // Vivaldi is Chromium-based and publishes the same metadata, so it needs
+      // the same three paths: window title, album, and music.youtube.com URL.
+      ["Vivaldi podcast in focused tab", vivaldi("The S in PHP is for Security", ""),
+        ["The S in PHP is for Security | YouTube Music - Vivaldi"], true],
+      ["Vivaldi song with album", vivaldi("A song", "An album"), [], true],
+      ["Vivaldi tab without hints", vivaldi("Some video", ""),
+        ["Some video - YouTube - Vivaldi"], false],
+      // Pear Desktop is YouTube Music by definition, so a podcast with no album
+      // and no matching window is claimed anyway.
+      ["Pear Desktop podcast without window", pear("The S in PHP is for Security"),
+        [], true],
+      // The bus name alone identifies Pear if a release renames its identity.
+      ["Pear Desktop by bus name only",
+        pear("A song", { identity: "YouTube Music Desktop" }), [], true],
+      // As does the desktop entry.
+      ["Pear Desktop by desktop entry only",
+        pear("A song", { identity: "Unbekannt", dbusName: "", desktopEntry: "pear-desktop" }),
+        [], true],
       // Non-browser players are not matched by window title.
       ["non-browser player", {
         identity: "Spotify", trackTitle: "A song", isPlaying: true,

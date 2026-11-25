@@ -36,16 +36,33 @@ Panel {
     return identity.indexOf("chrome") !== -1
       || identity.indexOf("chromium") !== -1
       || identity.indexOf("brave") !== -1
+      || identity.indexOf("vivaldi") !== -1
       || identity.indexOf("firefox") !== -1
       || identity.indexOf("mozilla zen") !== -1
+  }
+
+  // Players that serve YouTube Music and nothing else, so they need no
+  // heuristics: Pear Desktop (the Electron wrapper formerly known as
+  // th-ch/youtube-music) and the Omarchy web app. Pear exposes MPRIS from its
+  // Shortcuts plugin as org.mpris.MediaPlayer2.YouTubeMusic with the identity
+  // "YouTube Music"; the bus name and desktop entry checks keep detection
+  // working if a release ever renames that identity.
+  function isDesktopApp(candidate) {
+    if (!candidate) return false
+    var identity = String(candidate.identity || "").toLowerCase()
+    var dbusName = String(candidate.dbusName || "").toLowerCase()
+    var desktopEntry = String(candidate.desktopEntry || "").toLowerCase()
+    if (identity.indexOf("youtube music") !== -1) return true
+    if (dbusName.indexOf("youtubemusic") !== -1) return true
+    return desktopEntry.indexOf("youtube-music") !== -1
+      || desktopEntry.indexOf("pear-desktop") !== -1
   }
 
   function isYoutubeMusic(candidate) {
     if (!candidate) return false
     var metadata = candidate.metadata || {}
     var url = String(metadata["xesam:url"] || "").toLowerCase()
-    var identity = String(candidate.identity || "").toLowerCase()
-    if (identity.indexOf("youtube music") !== -1) return true
+    if (isDesktopApp(candidate)) return true
     if (url.indexOf("music.youtube.com") !== -1) return true
     // Chromium-family browsers publish no xesam:url, and YouTube Music leaves
     // xesam:album empty for podcast episodes, so the album check below misses
@@ -53,11 +70,11 @@ Panel {
     // the track title too keeps a different tab in the same browser process
     // (which shares this one MPRIS player) from being claimed.
     if (isBrowser(candidate) && hasYoutubeMusicWindowFor(candidate)) return true
-    // Chrome identifies only as "Chrome" and publishes no xesam:url at all, so
-    // neither check above can ever fire for it. Of the keys Chrome does
-    // publish, xesam:album is the discriminator: YouTube Music populates it,
-    // while a regular YouTube video publishes it as an empty string. This is
-    // much narrower than matching any playing browser.
+    // Chrome, Chromium, Brave, and Vivaldi identify only by browser name and
+    // often publish no xesam:url at all, so neither check above can fire for
+    // them. Of the keys they do publish, xesam:album is the discriminator:
+    // YouTube Music populates it, while a regular YouTube video publishes it as
+    // an empty string. This is much narrower than matching any playing browser.
     return isBrowser(candidate) && String(metadata["xesam:album"] || "") !== ""
   }
 

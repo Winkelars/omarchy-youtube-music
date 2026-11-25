@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "levi.youtube-music",
   "name": "YouTube Music",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "author": "Levy Vix",
   "license": "MIT",
   "description": "YouTube Music MPRIS controller with album art, progress, and playback controls.",
